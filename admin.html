@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel – LinkDock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple: #7c3aed;
+      --bg: #080810;
+      --card: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --text: #e8e8f0;
+      --muted: #55556a;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.1; }
+    .orb1 { width: 500px; height: 500px; background: #7c3aed; top: -150px; left: -100px; }
+    .orb2 { width: 400px; height: 400px; background: #dc2626; bottom: -100px; right: -100px; }
+
+    /* nav */
+    nav {
+      position: relative; z-index: 10;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1000px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .logo { font-size: 18px; font-weight: 800; color: #fff; }
+    .logo span { color: #a78bfa; }
+    .admin-badge {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #ef4444;
+      font-size: 11px; font-weight: 700;
+      padding: 4px 12px; border-radius: 50px;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .logout-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: #aaa; font-size: 12px; font-weight: 600;
+      padding: 7px 16px; border-radius: 50px;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+    }
+    .logout-btn:hover { color: #fff; }
+
+    /* main */
+    .main {
+      position: relative; z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .page-title { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .page-sub { font-size: 14px; color: var(--muted); margin-bottom: 36px; }
+
+    /* grid */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+    }
+    .panel-title {
+      font-size: 15px; font-weight: 700; color: #fff;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    label {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      display: block; margin-bottom: 5px;
+    }
+
+    input, select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 9px;
+      padding: 11px 13px;
+      font-size: 13px; color: #fff;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 14px;
+    }
+    input:focus, select:focus { border-color: var(--purple); }
+    input::placeholder { color: #333; }
+    select option { background: #1a1a2e; }
+
+    .btn {
+      width: 100%;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #fff; font-size: 14px; font-weight: 700;
+      padding: 12px; border-radius: 10px; border: none;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: opacity 0.2s; margin-top: 4px;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .msg {
+      font-size: 13px; padding: 10px 14px;
+      border-radius: 8px; margin-top: 12px;
+      display: none;
+    }
+    .msg.show { display: block; }
+    .msg.success { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+    .msg.error { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+
+    /* purchases list */
+    .purchase-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .purchase-row:last-child { border-bottom: none; }
+    .pr-info { flex: 1; min-width: 0; }
+    .pr-name { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pr-email { font-size: 11px; color: var(--muted); }
+    .pr-date { font-size: 11px; color: var(--muted); }
+    .pr-type {
+      font-size: 10px; font-weight: 700;
+      padding: 3px 9px; border-radius: 50px;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.3);
+      color: #a78bfa;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .del-btn {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.2);
+      color: #ef4444; font-size: 11px; font-weight: 600;
+      padding: 5px 10px; border-radius: 6px;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      flex-shrink: 0;
+    }
+    .del-btn:hover { background: rgba(239,68,68,0.2); }
+
+    .no-purchases {
+      text-align: center; padding: 30px;
+      font-size: 13px; color: var(--muted);
+    }
+
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* !! IMPORTANT: Change this to YOUR admin email !! */
+  </style>
+</head>
+<body>
+
+<div class="orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+</div>
+
+<nav>
+  <div class="nav-inner">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="logo">Link<span>Dock</span></div>
+      <span class="admin-badge">Admin</span>
+    </div>
+    <button class="logout-btn" onclick="auth.signOut().then(()=>location.href='login.html')">Logout</button>
+  </div>
+</nav>
+
+<div class="main" id="mainContent" style="display:none">
+  <div class="page-title">Admin Panel 🛠️</div>
+  <div class="page-sub">Add purchases for customers and manage all orders.</div>
+
+  <div class="grid">
+
+    <!-- Add Purchase Form -->
+    <div class="panel">
+      <div class="panel-title">➕ Add New Purchase</div>
+
+      <label>Customer Email</label>
+      <input type="email" id="custEmail" placeholder="customer@email.com" />
+
+      <label>Product Name</label>
+      <input type="text" id="prodName" placeholder="e.g. Video Editing Bundle 2026" />
+
+      <label>Google Drive Link</label>
+      <input type="url" id="driveLink" placeholder="https://drive.google.com/..." />
+
+      <label>Resource Type</label>
+      <select id="resType">
+        <option value="SFX Pack">SFX Pack</option>
+        <option value="Video Bundle">Video Bundle</option>
+        <option value="Graphics Pack">Graphics Pack</option>
+        <option value="Course">Course</option>
+        <option value="LUT Pack">LUT Pack</option>
+        <option value="Transitions">Transitions</option>
+        <option value="Thumbnail Kit">Thumbnail Kit</option>
+        <option value="Full Bundle">Full Bundle</option>
+      </select>
+
+      <button class="btn" id="addBtn" onclick="addPurchase()">Add Purchase</button>
+      <div class="msg" id="addMsg"></div>
+    </div>
+
+    <!-- Recent Purchases List -->
+    <div class="panel">
+      <div class="panel-title">📋 Recent Purchases</div>
+      <div id="purchasesList">
+        <div class="no-purchases">Loading...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Access denied message -->
+<div id="accessDenied" style="display:none; position:relative; z-index:1; text-align:center; padding:100px 20px;">
+  <div style="font-size:48px;margin-bottom:16px;">🚫</div>
+  <h2 style="color:#fff;margin-bottom:8px;">Access Denied</h2>
+  <p style="color:#555;margin-bottom:24px;">You don't have admin access.</p>
+  <a href="dashboard.html" style="color:#a78bfa;">Go to Dashboard →</a>
+</div>
+
+<script>
+  // !! CHANGE THIS TO YOUR EMAIL !!
+  const ADMIN_EMAIL = 'your-admin@email.com';
+
+  auth.onAuthStateChanged(async user => {
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    if (user.email !== ADMIN_EMAIL) {
+      document.getElementById('accessDenied').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('mainContent').style.display = 'block';
+    loadRecentPurchases();
+  });
+
+  async function addPurchase() {
+    const email     = document.getElementById('custEmail').value.trim();
+    const prodName  = document.getElementById('prodName').value.trim();
+    const driveLink = document.getElementById('driveLink').value.trim();
+    const type      = document.getElementById('resType').value;
+    const msgEl     = document.getElementById('addMsg');
+
+    if (!email || !prodName || !driveLink) {
+      return showMsg(msgEl, 'Please fill in all fields.', 'error');
+    }
+
+    document.getElementById('addBtn').disabled = true;
+    document.getElementById('addBtn').innerHTML = '<span class="spinner"></span>Adding...';
+
+    try {
+      // Find user by email
+      const usersSnap = await db.collection('users').where('email', '==', email).get();
+
+      let userId = null;
+      if (!usersSnap.empty) {
+        userId = usersSnap.docs[0].id;
+      }
+
+      if (!userId) {
+        document.getElementById('addBtn').disabled = false;
+        document.getElementById('addBtn').textContent = 'Add Purchase';
+        return showMsg(msgEl, 'No account found with this email. Ask the customer to sign up first.', 'error');
+      }
+
+      await db.collection('purchases').add({
+        userId,
+        customerEmail: email,
+        productName: prodName,
+        driveLink,
+        type,
+        purchasedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      showMsg(msgEl, `✅ Purchase added for ${email}!`, 'success');
+      document.getElementById('custEmail').value = '';
+      document.getElementById('prodName').value = '';
+      document.getElementById('driveLink').value = '';
+      loadRecentPurchases();
+
+    } catch(e) {
+      showMsg(msgEl, 'Error: ' + e.message, 'error');
+    }
+
+    document.getElementById('addBtn').disabled = false;
+    document.getElementById('addBtn').textContent = 'Add Purchase';
+  }
+
+  async function loadRecentPurchases() {
+    const el = document.getElementById('purchasesList');
+    try {
+      const snap = await db.collection('purchases')
+        .orderBy('purchasedAt', 'desc')
+        .limit(20)
+        .get();
+
+      if (snap.empty) {
+        el.innerHTML = '<div class="no-purchases">No purchases yet.</div>';
+        return;
+      }
+
+      el.innerHTML = snap.docs.map(doc => {
+        const p = doc.data();
+        const date = p.purchasedAt ? p.purchasedAt.toDate().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : 'N/A';
+        return `
+          <div class="purchase-row">
+            <div class="pr-info">
+              <div class="pr-name">${escHtml(p.productName)}</div>
+              <div class="pr-email">${escHtml(p.customerEmail)}</div>
+              <div class="pr-date">${date}</div>
+            </div>
+            <span class="pr-type">${escHtml(p.type)}</span>
+            <button class="del-btn" onclick="deletePurchase('${doc.id}')">✕</button>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      el.innerHTML = `<div class="no-purchases">Error: ${e.message}</div>`;
+    }
+  }
+
+  async function deletePurchase(id) {
+    if (!confirm('Delete this purchase? The customer will lose access.')) return;
+    await db.collection('purchases').doc(id).delete();
+    loadRecentPurchases();
+  }
+
+  function showMsg(el, text, type) {
+    el.textContent = text;
+    el.className = 'msg show ' + type;
+    setTimeout(() => el.classList.remove('show'), 5000);
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

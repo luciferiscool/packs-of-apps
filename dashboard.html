@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Purchases – LinkDock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple: #7c3aed;
+      --purple-light: #a78bfa;
+      --bg: #080810;
+      --card: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --text: #e8e8f0;
+      --muted: #55556a;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .orbs {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.12; }
+    .orb1 { width: 500px; height: 500px; background: #7c3aed; top: -100px; left: -100px; }
+    .orb2 { width: 400px; height: 400px; background: #2563eb; bottom: 0; right: -100px; }
+
+    /* nav */
+    nav {
+      position: relative; z-index: 10;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1000px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .logo { font-size: 18px; font-weight: 800; color: #fff; }
+    .logo span { color: var(--purple-light); }
+
+    .nav-right { display: flex; align-items: center; gap: 14px; }
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 6px 14px 6px 6px;
+      font-size: 13px; color: #ccc;
+    }
+    .avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+    }
+    .logout-btn {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.2);
+      color: #ef4444;
+      font-size: 12px; font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: background 0.2s;
+    }
+    .logout-btn:hover { background: rgba(239,68,68,0.2); }
+
+    /* main */
+    .main {
+      position: relative; z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* greeting */
+    .greeting { margin-bottom: 36px; }
+    .greeting h1 { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .greeting p { font-size: 14px; color: var(--muted); }
+
+    /* stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .stat-val { font-size: 24px; font-weight: 800; color: #fff; }
+
+    /* section title */
+    .section-title {
+      font-size: 16px; font-weight: 700; color: #fff;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* purchase cards */
+    .purchases-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .purchase-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .purchase-card:hover { border-color: rgba(124,58,237,0.4); transform: translateY(-2px); }
+
+    .card-thumb {
+      height: 120px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+      position: relative;
+    }
+
+    .card-type {
+      position: absolute; top: 10px; right: 10px;
+      font-size: 10px; font-weight: 700;
+      padding: 4px 10px; border-radius: 50px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      background: rgba(124,58,237,0.25);
+      border: 1px solid rgba(124,58,237,0.4);
+      color: #a78bfa;
+    }
+
+    .card-body { padding: 16px 18px 18px; }
+    .card-name { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+    .card-date { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+
+    .card-actions { display: flex; gap: 8px; }
+    .btn-access {
+      flex: 1;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #fff;
+      font-size: 12px; font-weight: 700;
+      padding: 9px 14px;
+      border-radius: 8px; border: none;
+      cursor: pointer; text-align: center;
+      text-decoration: none;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: opacity 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-access:hover { opacity: 0.85; }
+    .btn-copy {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: #aaa;
+      font-size: 12px; font-weight: 600;
+      padding: 9px 14px;
+      border-radius: 8px; cursor: pointer;
+      transition: background 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-copy:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+    /* empty state */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty h3 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .empty p { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+    .btn-shop {
+      display: inline-block;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #fff; font-size: 14px; font-weight: 700;
+      padding: 12px 28px; border-radius: 50px;
+      text-decoration: none;
+    }
+
+    /* loading */
+    .loading {
+      text-align: center; padding: 60px 20px; color: var(--muted);
+    }
+    .spinner {
+      display: inline-block;
+      width: 32px; height: 32px;
+      border: 3px solid rgba(124,58,237,0.2);
+      border-top-color: #7c3aed;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* toast */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: #10b981; color: #fff;
+      font-size: 13px; font-weight: 600;
+      padding: 10px 24px; border-radius: 50px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 600px) {
+      .greeting h1 { font-size: 20px; }
+      .nav-right .user-chip span { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+</div>
+
+<!-- nav -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">Link<span>Dock</span></div>
+    <div class="nav-right">
+      <div class="user-chip">
+        <div class="avatar" id="avatarInitial">?</div>
+        <span id="navUserName">Loading...</span>
+      </div>
+      <button class="logout-btn" onclick="logoutUser()">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<!-- main -->
+<div class="main">
+  <div class="greeting">
+    <h1 id="greeting">Welcome back! 👋</h1>
+    <p>Here are all your purchased resources, ready to access.</p>
+  </div>
+
+  <!-- stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Purchases</div>
+      <div class="stat-val" id="totalPurchases">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Member Since</div>
+      <div class="stat-val" id="memberSince">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Resources Access</div>
+      <div class="stat-val" id="totalAccess">—</div>
+    </div>
+  </div>
+
+  <!-- purchases -->
+  <div class="section-title">📦 Your Purchases</div>
+  <div id="purchasesContainer">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div>Loading your purchases...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Link copied!</div>
+
+<script>
+  let currentUser = null;
+
+  auth.onAuthStateChanged(async user => {
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+    currentUser = user;
+
+    // Set user info in nav
+    const name = user.displayName || user.email.split('@')[0];
+    document.getElementById('navUserName').textContent = name;
+    document.getElementById('avatarInitial').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('greeting').textContent = `Welcome back, ${name.split(' ')[0]}! 👋`;
+
+    // Load user data
+    try {
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        const data = userDoc.data();
+        if (data.createdAt) {
+          const date = data.createdAt.toDate();
+          document.getElementById('memberSince').textContent =
+            date.toLocaleString('default', { month: 'short', year: 'numeric' });
+        }
+      }
+    } catch(e) {}
+
+    loadPurchases(user.uid);
+  });
+
+  async function loadPurchases(uid) {
+    try {
+      const snap = await db.collection('purchases')
+        .where('userId', '==', uid)
+        .orderBy('purchasedAt', 'desc')
+        .get();
+
+      const container = document.getElementById('purchasesContainer');
+      document.getElementById('totalPurchases').textContent = snap.size;
+      document.getElementById('totalAccess').textContent = snap.size + ' Pack' + (snap.size !== 1 ? 's' : '');
+
+      if (snap.empty) {
+        container.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">🛍️</div>
+            <h3>No purchases yet</h3>
+            <p>Browse our resources and grab your first pack!</p>
+            <a href="index.html" class="btn-shop">Browse Resources →</a>
+          </div>`;
+        return;
+      }
+
+      const bgColors = [
+        'linear-gradient(135deg,#1a0533,#2d1b69)',
+        'linear-gradient(135deg,#0b1e40,#1e3a8a)',
+        'linear-gradient(135deg,#0d1a12,#14532d)',
+        'linear-gradient(135deg,#1c0a00,#7c2d12)',
+        'linear-gradient(135deg,#0f172a,#4c1d95)',
+      ];
+      const emojis = ['🎬','🔊','🎨','✨','📁','🚀','🎥','📚'];
+
+      let html = '<div class="purchases-grid">';
+      snap.docs.forEach((doc, i) => {
+        const p = doc.data();
+        const date = p.purchasedAt ? p.purchasedAt.toDate().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : 'N/A';
+        const bg = bgColors[i % bgColors.length];
+        const emoji = emojis[i % emojis.length];
+        html += `
+          <div class="purchase-card">
+            <div class="card-thumb" style="background:${bg}">
+              ${emoji}
+              <span class="card-type">${p.type || 'Resource'}</span>
+            </div>
+            <div class="card-body">
+              <div class="card-name">${escHtml(p.productName)}</div>
+              <div class="card-date">Purchased on ${date}</div>
+              <div class="card-actions">
+                <a class="btn-access" href="${escHtml(p.driveLink)}" target="_blank" rel="noopener">
+                  🔗 Open Resource
+                </a>
+                <button class="btn-copy" onclick="copyLink('${escHtml(p.driveLink)}')">Copy</button>
+              </div>
+            </div>
+          </div>`;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+
+    } catch(e) {
+      document.getElementById('purchasesContainer').innerHTML =
+        `<div class="empty"><div class="empty-icon">⚠️</div><h3>Error loading purchases</h3><p>${e.message}</p></div>`;
+    }
+  }
+
+  function copyLink(link) {
+    navigator.clipboard.writeText(link).then(() => {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    });
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function logoutUser() {
+    await auth.signOut();
+    window.location.href = 'login.html';
+  }
+</script>
+</body>
+</html>
