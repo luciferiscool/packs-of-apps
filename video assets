@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Editing Asset – By Packs of apps</title>
+  <meta name="description" content="Video Editing Resources & Assets Collection by Packs of apps" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0d0d0d;
+      color: #e8e8e8;
+      min-height: 100vh;
+    }
+
+    /* ── Hero gradient background ── */
+    .hero-bg {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 20% 10%, #1a0533 0%, transparent 55%),
+                  radial-gradient(ellipse at 80% 0%, #0b1e40 0%, transparent 50%),
+                  radial-gradient(ellipse at 50% 80%, #0d1a12 0%, transparent 60%),
+                  #0d0d0d;
+      z-index: 0;
+    }
+
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 48px 20px 80px;
+    }
+
+    /* ── Profile card ── */
+    .profile-card {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin: 0 auto 14px;
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.35), 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    .profile-name {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: #fff;
+    }
+
+    .built-by {
+      font-size: 12px;
+      color: #555;
+      margin-top: 6px;
+    }
+
+    /* ── Main card ── */
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 32px 28px;
+      backdrop-filter: blur(12px);
+      margin-bottom: 24px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #7c3aed;
+      margin-bottom: 20px;
+    }
+
+    .page-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    /* ── Resource grid ── */
+    .resources-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .resource-pill {
+      background: rgba(124,58,237,0.1);
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #c4b5fd;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .resource-pill .icon { font-size: 15px; flex-shrink: 0; }
+
+    /* ── What's inside ── */
+    .inside-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 14px;
+    }
+
+    .tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      font-size: 12px;
+      font-weight: 500;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 5px 13px;
+      color: #bbb;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.07);
+      margin: 26px 0;
+    }
+
+    /* ── Disclaimer ── */
+    .disclaimer {
+      background: rgba(250,204,21,0.06);
+      border: 1px solid rgba(250,204,21,0.18);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 12.5px;
+      color: #d4a800;
+      line-height: 1.65;
+    }
+
+    .disclaimer strong { color: #fbbf24; }
+
+    /* ── CTA button ── */
+    .cta-wrap {
+      text-align: center;
+      margin-top: 28px;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 14px 44px;
+      border-radius: 50px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 24px rgba(124,58,237,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+      letter-spacing: 0.2px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(124,58,237,0.55);
+    }
+
+    .price-note {
+      font-size: 12px;
+      color: #555;
+      margin-top: 10px;
+    }
+
+    /* ── Hashtags ── */
+    .hashtags {
+      font-size: 12px;
+      color: #3b82f6;
+      line-height: 2;
+      word-spacing: 4px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 12px;
+      color: #3a3a3a;
+    }
+
+    .footer a { color: #555; text-decoration: none; }
+
+    @media (max-width: 420px) {
+      .page-title { font-size: 21px; }
+      .resources-grid { grid-template-columns: 1fr; }
+      .card { padding: 24px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="hero-bg"></div>
+
+<div class="page-wrap">
+
+  <!-- Profile -->
+  <div class="profile-card">
+    <div class="avatar">🎬</div>
+    <div class="profile-name">Packs of apps</div>
+    <div class="built-by">Video Editing Resources</div>
+  </div>
+
+  <!-- Main content card -->
+  <div class="card">
+    <div class="section-label">About This Page</div>
+
+    <h1 class="page-title">🎬 Video Editing Resources &amp; Assets Collection</h1>
+    <p class="page-subtitle">Looking for high-quality video editing resources? Here's a curated collection of editing assets, SFX, graphics, courses, and creator resources.</p>
+
+    <!-- Resources included -->
+    <div class="inside-title">📦 Resources Included</div>
+    <div class="resources-grid">
+      <div class="resource-pill"><span class="icon">🔊</span> SFX Pack</div>
+      <div class="resource-pill"><span class="icon">🔥</span> Designs Burner</div>
+      <div class="resource-pill"><span class="icon">🎥</span> Video Editing Bundle</div>
+      <div class="resource-pill"><span class="icon">🚀</span> 2026 Latest Bundle</div>
+      <div class="resource-pill"><span class="icon">🎨</span> Graphics Bundle</div>
+      <div class="resource-pill"><span class="icon">📚</span> Editing Course</div>
+      <div class="resource-pill"><span class="icon">✨</span> Editing Examples</div>
+      <div class="resource-pill"><span class="icon">📁</span> Video Assets</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- What's inside -->
+    <div class="inside-title">💡 What's Inside?</div>
+    <div class="tags-wrap">
+      <span class="tag">Sound Effects (SFX)</span>
+      <span class="tag">Video Editing Assets</span>
+      <span class="tag">Motion Graphics</span>
+      <span class="tag">PNGs</span>
+      <span class="tag">Overlays</span>
+      <span class="tag">Transitions</span>
+      <span class="tag">LUTs</span>
+      <span class="tag">Fonts</span>
+      <span class="tag">Presets</span>
+      <span class="tag">Editing Templates</span>
+      <span class="tag">Thumbnail Resources</span>
+      <span class="tag">Graphics Bundle</span>
+      <span class="tag">Creator Resources</span>
+      <span class="tag">Video Editing Courses</span>
+      <span class="tag">Editing Examples</span>
+      <span class="tag">Premium Editing Materials</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+      <strong>⚠️ Disclaimer:</strong> These resources are shared for educational and informational purposes only. Please respect the original creators' copyrights, licenses, and terms of use. Availability of resources may change over time.
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Hashtags -->
+    <div class="hashtags">
+      #VideoEditing #EditingAssets #SFX #GraphicsBundle #PremierePro #AfterEffects #CapCut #DaVinciResolve #Canva #ContentCreator #VideoEditor #Resources #EditingCourse #MotionGraphics
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-wrap">
+      <a href="www.recappharma.com" class="btn-primary"> Get Access at ₹ 80.00 </a>
+      <div class="price-note">👍 Like, Share &amp; Subscribe for more  resources!</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Made with 🤍 &nbsp;|&nbsp; <a href="#">Packs of apps</a>
+  </div>
+
+</div>
+
+</body>
+</html>
